@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href='styles.css'>
+    <title>Chat UI</title>
+</head>
+<script>
+    const apiUrl = 'https://my-json-server.typicode.com/codebuds-fk/chat/chats';
+
+    let chatViewData = null;
+
+    function clickHandler(id) {
+
+        const chatView = document.querySelector('#single-chat-view');
+
+        chatView.style.display = 'flex';
+        chatView.style.flexDirection = 'column';
+
+        const listItems = document.querySelectorAll('#main-list-container li');
+            listItems.forEach(item => {
+                item.style.backgroundColor = '';
+        });
+
+        document.querySelector(`#list-button-${id}`).style.backgroundColor = 'yellow';
+
+        const messagesHTML = chatViewData[id].messageList.map(message => `
+            <div class="message ${message.sender === 'BOT' ? 'left' : 'right'}">
+                <p>${message.sender}: ${message.message}</p>
+                <span>${new Date(message.timestamp).toLocaleTimeString()}</span>
+            </div>
+        `).join('');
+
+        chatView.innerHTML = `
+            <button onclick="document.querySelector('#single-chat-view').style.display = 'none'; const listItems = document.querySelectorAll('#main-list-container li');
+            listItems.forEach(item => {
+                item.style.backgroundColor = '';
+        });">close</button>
+            <h3>${chatViewData[id].title}</h3>
+            <div id="chat-messages">${messagesHTML}</div>
+        `
+
+    };
+
+    async function getData() {
+        await fetch(apiUrl).then(response => {
+
+            if (!response.ok) {
+                throw new Error('HTTP Status is not 200, please check properly...')
+            }
+    
+            return response.json();
+        }).then(data => {
+            const listContainer = document.querySelector('#main-list-container');
+
+            data.forEach(element => {
+
+                chatViewData = data;
+
+                const listwrapper = document.createElement('ul');
+
+                listwrapper.innerHTML = `
+                    <li id='list-button-${element.id - 1}' onclick="clickHandler(${element.id - 1})">
+                        <h3>${element.title}</h3>
+                        <h4>Order ${element.orderId}</h4>
+                        <span>${new Date(element.latestMessageTimestamp).toLocaleDateString('en-US')}</span>
+                    </li>
+                `
+
+                listContainer.appendChild(listwrapper)
+
+
+            });
+        }).catch(error => {
+            console.error(error + 'some error occured')
+        })
+    };
+
+    getData()
+</script>
+<body>
+    <main>
+        <div id="main-window">
+            <div id="main-list-container">
+                
+            </div>
+            <div id="single-chat-view">
+            </div>
+        </div>
+    </main>
+</body>
+<!-- <script src="app.js" /> -->
+</html>
